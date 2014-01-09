@@ -59,6 +59,26 @@ Last-Update: <YYYY-MM-DD>
  
  IF (EXISTS ${CMAKE_HOME_DIRECTORY}/.git AND NOT DEFINED IGNORE_GIT)
  	EXECUTE_PROCESS(
+--- accel-ppp-1.8.0-beta.orig/contrib/debian/accel-ppp-init
++++ accel-ppp-1.8.0-beta/contrib/debian/accel-ppp-init
+@@ -19,7 +19,7 @@ if test -f /etc/default/accel-ppp; then
+ fi
+ 
+ if [ -z "$ACCEL_PPPD_OPTS" ]; then
+-  ACCEL_PPPD_OPTS="-c /etc/accel-ppp.conf"
++  exit 0
+ fi
+ 
+ case "$1" in
+--- accel-ppp-1.8.0-beta.orig/contrib/debian/accel-ppp-default
++++ accel-ppp-1.8.0-beta/contrib/debian/accel-ppp-default
+@@ -1,5 +1 @@
+-# Config file for /etc/init.d/accel-pppd
+-
+-# Any extra options you want to pass to aceel-pptpd
+-# on start-up should be put here.
+-ACCEL_PPPD_OPTS="-c /etc/accel-ppp.conf"
++ACCEL_PPPD_OPTS=""
 --- accel-ppp-1.8.0-beta.orig/accel-pppd/CMakeLists.txt
 +++ accel-ppp-1.8.0-beta/accel-pppd/CMakeLists.txt
 @@ -1,5 +1,10 @@
@@ -73,6 +93,19 @@ Last-Update: <YYYY-MM-DD>
  
  INCLUDE_DIRECTORIES(include)
  
+@@ -106,12 +111,3 @@ INSTALL(TARGETS accel-pppd
+ 	RUNTIME DESTINATION sbin
+ )
+ 
+-INSTALL(FILES accel-ppp.conf.5 DESTINATION share/man/man5)
+-
+-IF (NOT DEFINED CPACK_TYPE)
+-	INSTALL(FILES accel-ppp.conf DESTINATION ${CMAKE_FIND_ROOT_PATH}/etc RENAME accel-ppp.conf.dist)
+-
+-	INSTALL(CODE "EXECUTE_PROCESS(COMMAND mkdir -p ${CMAKE_FIND_ROOT_PATH}/var/log/accel-ppp)")
+-	INSTALL(CODE "EXECUTE_PROCESS(COMMAND mkdir -p ${CMAKE_FIND_ROOT_PATH}/var/lib/accel-ppp)")
+-ENDIF (NOT DEFINED CPACK_TYPE)
+-
 --- accel-ppp-1.8.0-beta.orig/accel-pppd/extra/ippool.c
 +++ accel-ppp-1.8.0-beta/accel-pppd/extra/ippool.c
 @@ -117,7 +117,7 @@ static int parse1(const char *str, uint3
