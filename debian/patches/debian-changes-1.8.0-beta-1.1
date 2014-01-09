@@ -1,0 +1,117 @@
+Description: Upstream changes introduced in version 1.8.0-beta-1.1
+ This patch has been created by dpkg-source during the package build.
+ Here's the last changelog entry, hopefully it gives details on why
+ those changes were made:
+ .
+ accel-ppp (1.8.0-beta-1.1) UNRELEASED; urgency=low
+ .
+   * Non-maintainer upload.
+   *
+   *
+ .
+ The person named in the Author field signed this changelog entry.
+Author: Cesar Fazan <cesar.fazan@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- accel-ppp-1.8.0-beta.orig/CMakeLists.txt
++++ accel-ppp-1.8.0-beta/CMakeLists.txt
+@@ -6,19 +6,19 @@ project(accel-ppp C)
+ 
+ include(cmake/cpack.cmake)
+ 
+-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fno-strict-aliasing -D_GNU_SOURCE -fPIC -rdynamic")
++SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fno-strict-aliasing -D_GNU_SOURCE -fPIC -rdynamic $ENV{CFLAGS}")
+ 
+-IF (NOT DEFINED LIB_SUFFIX)
+-	EXECUTE_PROCESS(
+-		COMMAND uname -m
+-		COMMAND tr -d '\n'
+-		OUTPUT_VARIABLE ARCH
+-	)
+-	message(STATUS "'"  ${ARCH}  "'")
+-	IF (ARCH STREQUAL x86_64)
+-		SET(LIB_SUFFIX 64)
+-	ENDIF (ARCH STREQUAL x86_64)
+-ENDIF (NOT DEFINED LIB_SUFFIX)
++#IF (NOT DEFINED LIB_SUFFIX)
++#	EXECUTE_PROCESS(
++#		COMMAND uname -m
++#		COMMAND tr -d '\n'
++#		OUTPUT_VARIABLE ARCH
++#	)
++#	message(STATUS "'"  ${ARCH}  "'")
++#	IF (ARCH STREQUAL x86_64)
++#		SET(LIB_SUFFIX 64)
++#	ENDIF (ARCH STREQUAL x86_64)
++#ENDIF (NOT DEFINED LIB_SUFFIX)
+ 
+ IF (EXISTS ${CMAKE_HOME_DIRECTORY}/.git AND NOT DEFINED IGNORE_GIT)
+ 	EXECUTE_PROCESS(
+--- accel-ppp-1.8.0-beta.orig/accel-pppd/CMakeLists.txt
++++ accel-ppp-1.8.0-beta/accel-pppd/CMakeLists.txt
+@@ -1,5 +1,10 @@
+ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+-ADD_DEFINITIONS(-DPTHREAD_SPINLOCK)
++IF (DEFINED MIPS_OCTEON_SPINLOCK)
++        ADD_DEFINITIONS(-DMIPS_OCTEON_SPINLOCK)
++ELSE (DEFINED MIPS_OCTEON_SPINLOCK)
++	ADD_DEFINITIONS(-DPTHREAD_SPINLOCK)
++ENDIF (DEFINED MIPS_OCTEON_SPINLOCK)
++
+ 
+ INCLUDE_DIRECTORIES(include)
+ 
+--- accel-ppp-1.8.0-beta.orig/accel-pppd/extra/ippool.c
++++ accel-ppp-1.8.0-beta/accel-pppd/extra/ippool.c
+@@ -117,7 +117,7 @@ static int parse1(const char *str, uint3
+ 	if (m == 0 || m > 32)
+ 		return -1;
+ 	
+-	*begin = (f4 << 24) | (f3 << 16) | (f2 << 8) | f1;
++	*begin = (f1 << 24) | (f2 << 16) | (f3 << 8) | f4;
+ 
+ 	mask = htonl(~((1 << (32 - m)) - 1));
+ 	*end = ntohl(*begin | ~mask);
+@@ -145,8 +145,8 @@ static int parse2(const char *str, uint3
+ 	if (m < f4 || m > 255)
+ 		return -1;
+ 	
+-	*begin = ntohl((f4 << 24) | (f3 << 16) | (f2 << 8) | f1);
+-	*end = ntohl((m << 24) | (f3 << 16) | (f2 << 8) | f1);
++	*begin = ntohl((f1 << 24) | (f2 << 16) | (f3 << 8) | f4);
++	*end = ntohl((f1 << 24) | (f2 << 16) | (f3 << 8) | m);
+ 
+ 	return 0;
+ }
+--- accel-ppp-1.8.0-beta.orig/accel-pppd/triton/spinlock.h
++++ accel-ppp-1.8.0-beta/accel-pppd/triton/spinlock.h
+@@ -28,6 +28,17 @@ typedef volatile int __attribute__((alig
+ #define SPINLOCK_INITIALIZER 0
+ #define spinlock_init(l) {*(l)=0;}
+ 
++#elif defined(MIPS_OCTEON_SPINLOCK)
++
++#include <asm/octeon/cvmx.h>
++#include <asm/octeon/cvmx-spinlock.h>
++typedef cvmx_spinlock_t spinlock_t;
++#define spin_lock(l) cvmx_spinlock_lock(l)
++#define spin_unlock(l) cvmx_spinlock_unlock(l)
++#define SPINLOCK_INITIALIZER CVMX_SPINLOCK_UNLOCKED_INITIALIZER
++#define spinlock_init(l) cvmx_spinlock_init(l)
++
++
+ #else
+ 
+ #include <pthread.h>

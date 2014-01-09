@@ -1,0 +1,12 @@
+Source: accel-ppp
+Section: net
+Priority: optional
+Maintainer: Cesar Fazan <cesar.fazan@gmail.com>
+Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 7.0.50~), cmake (>= 2.8), libssl-dev (>= 0.9.8k), libpcre3-dev (>= 7.8), libnl2-dev (>= 1.99)
+Homepage: http://sourceforge.net/projects/accel-ppp/
+
+Package: accel-ppp
+Architecture: any
+Depends: libssl0.9.8, libpcre3 (>= 7.8), libnl2 (>= 1.99)
+Description: High performance PPTP/L2TP/PPPoE server for Linux.
