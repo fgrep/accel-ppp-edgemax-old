@@ -1,1 +1,2 @@
 debian/vyatta-cfg-accel-ppp/*	opt/vyatta/
+debian/accel-ppp.conf etc/accel-ppp/

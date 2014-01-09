@@ -1,4 +1,4 @@
-multi:
+tag: 
 type: txt
 help: interface(s) to listen on
 

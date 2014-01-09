@@ -1,8 +1,0 @@
-type: u32
-
-help: Maximum Receive Unit (MRU)
-
-syntax:expression: $VAR(@) >= 128 && $VAR(@) <= 16384;
-                   "MRU must be between 128 and 16384 bytes"
-
-val_help: u32:128-16384; Maximum Receive Unit (MRU)

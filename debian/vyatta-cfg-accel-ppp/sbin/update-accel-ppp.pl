@@ -28,26 +28,28 @@ if ($config->isEmpty()) {
 my ($pppoe_conf, $err) = (undef, undef);
 
 #while (1) {
-    ($pppoe_conf, $err) = $config->get_ppp_opts();
-    last if (defined($err));
+($pppoe_conf, $err) = $config->get_ppp_opts();
+#    last if (defined($err));
 #}
 
 if (defined($err)) {
-    print STDERR "accel-ppp PPPoE server configuration error: $err.\n";
+    print STDERR "accel-ppp server configuration error: $err.\n";
     exit 1;
 }
 
 exit 1 if (!$config->removeCfg($FILE_PPPOE_CFG));
-
 exit 1 if (!$config->writeCfg($FILE_PPPOE_CFG, $pppoe_conf, 0, 0));
 
 if ($config->needsRestart($oconfig)) {
-    # restart pppoe-server
-    # XXX need to kill all pptpd instances since it does not keep track of
-    # existing sessions and will start assigning IPs already in use.
-    system("echo 'ACCEL_PPPD_OPTS=\"-c /etc/accel-ppp/accel-ppp.conf\"' > /etc/default/accel-ppp");
-    system('/usr/bin/accel-cmd shutdown >&/dev/null');
-    my $rc = system('/usr/sbin/invoke-rc.d accel-ppp start');
-    exit $rc;
+	
+	# restart accel-ppp
+	# We can use accel-cmd reload|restart to not disconnect clients
+	system("echo 'ACCEL_PPPD_OPTS=\"-c /etc/accel-ppp/accel-ppp.conf\"' > /etc/default/accel-ppp");
+	system('/usr/sbin/invoke-rc.d accel-ppp stop');
+	my $rc = system('/usr/sbin/invoke-rc.d accel-ppp start');
+	exit $rc;
+} else {
+	print STDERR "Teste2\n";
+	exit 1;
 }
 exit 0;
