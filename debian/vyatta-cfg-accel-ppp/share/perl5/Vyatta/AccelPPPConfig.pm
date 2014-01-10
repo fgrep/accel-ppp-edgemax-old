@@ -46,6 +46,22 @@ my %fields = (
 	_ppp_single_session		=> undef,
 	_ppp_unit_cache			=> undef,
 	_ppp_verbose			=> undef,
+	_radius				=> undef,
+	_radius_acct_delay_time		=> undef,
+	_radius_acct_interim_interval	=> undef,
+	_radius_acct_on			=> undef,
+	_radius_acct_timeout		=> undef,
+	_radius_dae_server		=> undef,
+	_radius_default_realm		=> undef,
+	_radius_dm_coa_secret		=> undef,
+	_radius_gw_ip_address		=> undef,
+	_radius_interim_verbose		=> undef,
+	_radius_max_try			=> undef,
+	_radius_nas_identifier		=> undef,
+	_radius_nas_ip_address		=> undef,
+	_radius_servers			=> [],
+	_radius_timeout			=> undef,
+	_radius_verbose			=> undef,
 	_is_empty			=> 1,
 );
 
@@ -128,6 +144,29 @@ sub setup_base {
 	$self->{_ppp_unit_cache}		= $config->$val_func('ppp-options unit-cache');
 	$self->{_ppp_verbose}			= $config->$val_func('ppp-options verbose');
 
+	if (defined($config->$vals_func('radius server'))) {
+		$self->{_radius}			= 1;
+		$self->{_radius_acct_delay_time}	= $config->$val_func('radius acct-delay-time');
+		$self->{_radius_acct_interim_interval}	= $config->$val_func('radius acct-interim-interval');
+		$self->{_radius_acct_on}		= $config->$val_func('radius acct-on');
+		$self->{_radius_acct_timeout}		= $config->$val_func('radius acct-timeout');
+		$self->{_radius_dae_server}		= $config->$val_func('radius dae-server');
+		$self->{_radius_default_realm}		= $config->$val_func('radius default-realm');
+		$self->{_radius_dm_coa_secret}		= $config->$val_func('radius dm_coa_secret');
+		$self->{_radius_gw_ip_address}		= $config->$val_func('radius gw-ip-address');
+		$self->{_radius_interim_verbose}	= $config->$val_func('radius interim-verbose');
+		$self->{_radius_max_try}		= $config->$val_func('radius max-try');
+		$self->{_radius_nas_identifier}		= $config->$val_func('radius nas-identifier');
+		$self->{_radius_nas_ip_address}		= $config->$val_func('radius nas-ip-address');
+		$self->{_radius_timeout}		= $config->$val_func('radius timeout');
+		$self->{_radius_verbose}		= $config->$val_func('radius verbose');
+
+		my @rservers = $config->$vals_func('radius server');
+		foreach my $rserver (@rservers) {
+			$self->{_radius_servers} = [ @{$self->{_radius_servers}}, $rserver];
+		}
+	}
+
 	return 0;
 }
 
@@ -162,14 +201,20 @@ sub isDifferentFrom {
 	my ($this, $that) = @_;
 
 	return 1 if ($this->{_is_empty} ne $that->{_is_empty});
-	return 1 if ($this->{_pppoe_ac} ne $that->{_pppoe_ac});
-	return 1 if ($this->{_pppoe_service} ne $that->{_pppoe_service});
-	return 1 if ($this->{_pppoe_mtu} ne $that->{_pppoe_mtu});
-	return 1 if (listsDiff($this->{_pppoe_intfs}, $that->{_pppoe_intfs}));
+
 	return 1 if ($this->{_global_dns1}, $that->{_global_dns1});
 	return 1 if ($this->{_global_dns2}, $that->{_global_dns2});
 	return 1 if ($this->{_global_wins1}, $that->{_global_wins1});
 	return 1 if ($this->{_global_wins2}, $that->{_global_wins2});
+
+	return 1 if ($this->{_pppoe_ac} ne $that->{_pppoe_ac});
+	return 1 if ($this->{_pppoe_service} ne $that->{_pppoe_service});
+	return 1 if ($this->{_pppoe_mtu} ne $that->{_pppoe_mtu});
+
+	return 1 if ($this->{_radius_nas_ip_address}, $that->{_radius_nas_ip_address});
+
+	return 1 if (listsDiff($this->{_pppoe_intfs}, $that->{_pppoe_intfs}));
+	return 1 if (listsDiff($this->{_radius_servers}, $that->{_radius_servers}));
 
 	return 0;
 }
@@ -178,14 +223,20 @@ sub needsRestart {
 	 my ($this, $that) = @_;
 
 	return 1 if ($this->{_is_empty} ne $that->{_is_empty});
-	return 1 if ($this->{_pppoe_ac} ne $that->{_pppoe_ac});
-	return 1 if ($this->{_pppoe_service} ne $that->{_pppoe_service});
-	return 1 if ($this->{_pppoe_mtu} ne $that->{_pppoe_mtu});
-	return 1 if (listsDiff($this->{_pppoe_intfs}, $that->{_pppoe_intfs}));
+
 	return 1 if ($this->{_global_dns1}, $that->{_global_dns1});
 	return 1 if ($this->{_global_dns2}, $that->{_global_dns2});
 	return 1 if ($this->{_global_wins1}, $that->{_global_wins1});
 	return 1 if ($this->{_global_wins2}, $that->{_global_wins2});
+
+	return 1 if ($this->{_pppoe_ac} ne $that->{_pppoe_ac});
+	return 1 if ($this->{_pppoe_service} ne $that->{_pppoe_service});
+	return 1 if ($this->{_pppoe_mtu} ne $that->{_pppoe_mtu});
+
+	return 1 if ($this->{_radius_nas_ip_address}, $that->{_radius_nas_ip_address});
+
+	return 1 if (listsDiff($this->{_pppoe_intfs}, $that->{_pppoe_intfs}));
+	return 1 if (listsDiff($this->{_radius_servers}, $that->{_radius_servers}));
 
 	return 0;
 }
@@ -368,6 +419,70 @@ sub get_ppp_opts {
 		$config .= "verbose=1\n";
 	}
 	$config .= "\n";
+
+	if (defined($self->{_radius})) {
+		return (undef, "Must define at least 1 radius server to enable radius")
+			if scalar(@{$self->{_radius_servers}}) < 1;
+
+		$loadmodules .= "radius\n";
+		$config .= "[radius]\n";
+
+		while (scalar(@{$self->{_radius_servers}}) > 0) {
+			my $rserver = shift @{$self->{_radius_servers}};
+			$config .= "server=$rserver\n";
+		}
+		if (defined($self->{_radius_acct_delay_time})) {
+			$config .= "acct-delay-time=$self->{_radius_acct_delay_time}\n";
+		}
+		if (defined($self->{_radius_acct_interim_interval})) {
+			$config .= "acct-interim-interval=$self->{_radius_acct_interim_interval}\n";
+		}
+		if (defined($self->{_radius_acct_on})) {
+			$config .= "acct-on=$self->{_radius_acct_on}\n";
+		}
+		if (defined($self->{_radius_acct_timeout})) {
+			$config .= "acct-timeout=$self->{_radius_acct_timeout}\n";
+		}
+		if (defined($self->{_radius_dae_server})) {
+			$config .= "dae-server=$self->{_radius_dae_server}\n";
+		}
+		if (defined($self->{_radius_default_realm})) {
+			$config .= "default-realm=$self->{_radius_default_realm}\n";
+		}
+		if (defined($self->{_radius_dm_coa_secret})) {
+			$config .= "dm_coa_secret=$self->{_radius_dm_coa_secret}\n";
+		}
+		if (defined($self->{_radius_gw_ip_address})) {
+			$config .= "gw-ip-address=$self->{_radius_gw_ip_address}\n";
+		} else {
+			$config .= "gw-ip-address=192.168.100.1\n";
+		}
+		if (defined($self->{_radius_interim_verbose})) {
+			$config .= "interim-verbose=$self->{_radius_interim_verbose}\n";
+		}
+		if (defined($self->{_radius_max_try})) {
+			$config .= "max-try=$self->{_radius_max_try}\n";
+		}
+		if (defined($self->{_radius_nas_identifier})) {
+			$config .= "nas-identifier=$self->{_radius_nas_identifier}\n";
+		} else {
+			$config .= "nas-identifier=accel-ppp\n";
+		}
+		if (defined($self->{_radius_nas_ip_address})) {
+			$config .= "nas-ip-address=$self->{_radius_nas_ip_address}\n";
+		} else {
+			$config .= "nas-ip-address=127.0.0.1\n";
+		}
+		if (defined($self->{_radius_timeout})) {
+			$config .= "timeout=$self->{_radius_timeout}\n";
+		}
+		if (defined($self->{_radius_verbose})) {
+			$config .= "verbose=$self->{_radius_verbose}\n";
+		} else {
+			$config .= "verbose=1\n";
+		}
+		$config .= "\n";
+	}
 
 	$finalconfig  = "$cfg_delim_begin\n";
 	$finalconfig .= $loadmodules . "\n";

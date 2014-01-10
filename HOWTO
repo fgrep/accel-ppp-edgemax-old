@@ -1,0 +1,14 @@
+- Simple pppoe server setup
+
+10.20.1.1 = edgemax ip
+10.20.1.2 = radius server
+
+
+set service accel-ppp dns-servers server-1 8.8.8.8
+set service accel-ppp dns-servers server-2 8.8.4.4
+
+set service accel-ppp pppoe access-concentrator TestAC
+set service accel-ppp pppoe interface eth1
+
+set service accel-ppp radius nas-ip-address 10.20.1.1
+set service accel-ppp radius server 10.20.1.2,secret,auth-port=1812,acct-port=1813,req-limit=0,fail-time=0
