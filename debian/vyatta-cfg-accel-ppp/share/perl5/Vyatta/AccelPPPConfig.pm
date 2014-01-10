@@ -93,19 +93,11 @@ sub setup_base {
 	}
 
 	# Global options
-	if (defined($config->$val_func('dns-servers server-1'))) {
-		$self->{_global_dns1} = $config->$val_func('dns-servers server-1');
-	}
-	if (defined($config->$val_func('dns-servers server-2'))) {
-		$self->{_global_dns2} = $config->$val_func('dns-servers server-2');
-	}
+	$self->{_global_dns1} = $config->$val_func('dns-servers server-1');
+	$self->{_global_dns2} = $config->$val_func('dns-servers server-2');
 
-	if (defined($config->$val_func('wins-servers server-1'))) {
-		$self->{_global_wins1} = $config->$val_func('wins-servers server-1');
-	}
-	if (defined($config->$val_func('wins-servers server-2'))) {
-		$self->{_global_wins2} = $config->$val_func('wins-servers server-2');
-	}
+	$self->{_global_wins1} = $config->$val_func('wins-servers server-1');
+	$self->{_global_wins2} = $config->$val_func('wins-servers server-2');
 
 	# PPPoE server
 	if (defined($config->$vals_func('pppoe'))) {
@@ -202,19 +194,32 @@ sub isDifferentFrom {
 
 	return 1 if ($this->{_is_empty} ne $that->{_is_empty});
 
-	return 1 if ($this->{_global_dns1}, $that->{_global_dns1});
-	return 1 if ($this->{_global_dns2}, $that->{_global_dns2});
-	return 1 if ($this->{_global_wins1}, $that->{_global_wins1});
-	return 1 if ($this->{_global_wins2}, $that->{_global_wins2});
+	return 1 if ($this->{_global_dns1} ne $that->{_global_dns1});
+	return 1 if ($this->{_global_dns2} ne $that->{_global_dns2});
+	return 1 if ($this->{_global_wins1} ne $that->{_global_wins1});
+	return 1 if ($this->{_global_wins2} ne $that->{_global_wins2});
 
 	return 1 if ($this->{_pppoe_ac} ne $that->{_pppoe_ac});
 	return 1 if ($this->{_pppoe_service} ne $that->{_pppoe_service});
 	return 1 if ($this->{_pppoe_mtu} ne $that->{_pppoe_mtu});
 
-	return 1 if ($this->{_radius_nas_ip_address}, $that->{_radius_nas_ip_address});
+	return 1 if ($this->{_radius_nas_ip_address} ne $that->{_radius_nas_ip_address});
 
 	return 1 if (listsDiff($this->{_pppoe_intfs}, $that->{_pppoe_intfs}));
 	return 1 if (listsDiff($this->{_radius_servers}, $that->{_radius_servers}));
+
+	return 0;
+}
+
+sub needsReload {
+	my ($this, $that) = @_;
+
+	return 0 if ($this->{_is_empty} ne $that->{_is_empty});
+
+	return 1 if ($this->{_global_dns1} ne $that->{_global_dns1});
+	return 1 if ($this->{_global_dns2} ne $that->{_global_dns2});
+	return 1 if ($this->{_global_wins1} ne $that->{_global_wins1});
+	return 1 if ($this->{_global_wins2} ne $that->{_global_wins2});
 
 	return 0;
 }
@@ -224,16 +229,11 @@ sub needsRestart {
 
 	return 1 if ($this->{_is_empty} ne $that->{_is_empty});
 
-	return 1 if ($this->{_global_dns1}, $that->{_global_dns1});
-	return 1 if ($this->{_global_dns2}, $that->{_global_dns2});
-	return 1 if ($this->{_global_wins1}, $that->{_global_wins1});
-	return 1 if ($this->{_global_wins2}, $that->{_global_wins2});
-
 	return 1 if ($this->{_pppoe_ac} ne $that->{_pppoe_ac});
 	return 1 if ($this->{_pppoe_service} ne $that->{_pppoe_service});
 	return 1 if ($this->{_pppoe_mtu} ne $that->{_pppoe_mtu});
 
-	return 1 if ($this->{_radius_nas_ip_address}, $that->{_radius_nas_ip_address});
+	return 1 if ($this->{_radius_nas_ip_address} ne $that->{_radius_nas_ip_address});
 
 	return 1 if (listsDiff($this->{_pppoe_intfs}, $that->{_pppoe_intfs}));
 	return 1 if (listsDiff($this->{_radius_servers}, $that->{_radius_servers}));
@@ -267,11 +267,11 @@ sub get_ppp_opts {
 	$config .= "log-file=/var/log/accel-ppp/accel-ppp.log\n";
 	$config .= "log-emerg=/var/log/accel-ppp/emerg.log\n";
 	$config .= "log-fail-file=/var/log/accel-ppp/auth-fail.log\n";
-	$config .= "level=5\n";
+	$config .= "level=1\n";
 	$config .= "copy=1\n\n";
 
 	$config .= "[cli]\n";
-	$config .= "telnet=127.0.0.1:2000\n";
+	$config .= "#telnet=127.0.0.1:2000\n";
 	$config .= "tcp=127.0.0.1:2001\n\n";
 
 
@@ -339,6 +339,8 @@ sub get_ppp_opts {
 		}
 		if (defined($self->{_pppoe_mppe})) {
 			$config .= "mppe=$self->{_pppoe_mppe}\n";
+		} else {
+			$config .= "mppe=deny\n";
 		}
 		if (defined($self->{_ip_pool})) {
 			$config .= "ip-pool=$self->{_pppoe_ip_pool}\n";

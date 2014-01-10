@@ -40,16 +40,17 @@ if (defined($err)) {
 exit 1 if (!$config->removeCfg($FILE_PPPOE_CFG));
 exit 1 if (!$config->writeCfg($FILE_PPPOE_CFG, $pppoe_conf, 0, 0));
 
-if ($config->needsRestart($oconfig)) {
-	
+if ($config->needsReload($oconfig)) {
+	system('/usr/bin/accel-cmd reload');
+	exit 0;
+}
+elsif ($config->needsRestart($oconfig)) {
 	# restart accel-ppp
 	# We can use accel-cmd reload|restart to not disconnect clients
+	# So far its not working need to investigate
 	system("echo 'ACCEL_PPPD_OPTS=\"-c /etc/accel-ppp/accel-ppp.conf\"' > /etc/default/accel-ppp");
 	system('/usr/sbin/invoke-rc.d accel-ppp stop');
 	my $rc = system('/usr/sbin/invoke-rc.d accel-ppp start');
 	exit $rc;
-} else {
-	print STDERR "Teste2\n";
-	exit 1;
 }
 exit 0;
