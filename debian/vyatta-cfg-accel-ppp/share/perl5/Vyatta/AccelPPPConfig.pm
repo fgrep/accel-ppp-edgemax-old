@@ -62,6 +62,27 @@ my %fields = (
 	_radius_servers			=> [],
 	_radius_timeout			=> undef,
 	_radius_verbose			=> undef,
+	_shaper				=> undef,
+	_shaper_vendor			=> undef,
+	_shaper_attr			=> undef,
+	_shaper_attr_down		=> undef,
+	_shaper_attr_up			=> undef,
+	_shaper_burst_factor		=> undef,
+	_shaper_down_burst_factor	=> undef,
+	_shaper_up_burst_factor		=> undef,
+	_shaper_latency			=> undef,
+	_shaper_mpu			=> undef,
+	_shaper_mtu			=> undef,
+	_shaper_r2q			=> undef,
+	_shaper_quantum			=> undef,
+	_shaper_cburst			=> undef,
+	_shaper_up_limiter		=> undef,
+	_shaper_down_limiter		=> undef,
+	_shaper_leaf_qdisc		=> undef,
+	_shaper_rate_multiplier		=> undef,
+	_shaper_ifb			=> undef,
+	_shaper_time_range		=> undef,
+	_shaper_verbose			=> undef,
 	_is_empty			=> 1,
 );
 
@@ -159,6 +180,29 @@ sub setup_base {
 		}
 	}
 
+	if (defined($config->$vals_func('shaper'))) {
+		$self->{_shaper}			= 1;
+		$self->{_shaper_vendor}			= $config->$val_func('shaper vendor');
+		$self->{_shaper_attr}			= $config->$val_func('shaper attr');
+		$self->{_shaper_attr_down}		= $config->$val_func('shaper attr-down');
+		$self->{_shaper_attr_up}		= $config->$val_func('shaper attr-up');
+		$self->{_shaper_burst_factor}		= $config->$val_func('shaper burst-factor');
+		$self->{_shaper_down_burst_factor}	= $config->$val_func('shaper down-burst-factor');
+		$self->{_shaper_up_burst_factor}	= $config->$val_func('shaper up-burst-factor');
+		$self->{_shaper_latency}		= $config->$val_func('shaper latency');
+		$self->{_shaper_mpu}			= $config->$val_func('shaper mpu');
+		$self->{_shaper_mtu}			= $config->$val_func('shaper mtu');
+		$self->{_shaper_r2q}			= $config->$val_func('shaper r2q');
+		$self->{_shaper_quantum}		= $config->$val_func('shaper quantum');
+		$self->{_shaper_cburst}			= $config->$val_func('shaper cburst');
+		$self->{_shaper_up_limiter}		= $config->$val_func('shaper up-limiter');
+		$self->{_shaper_down_limiter}		= $config->$val_func('shaper down-limiter');
+		$self->{_shaper_leaf_qdisc}		= $config->$val_func('shaper leaf-qdisc');
+		$self->{_shaper_rate_multiplier}	= $config->$val_func('shaper rate-multiplier');
+		$self->{_shaper_ifb}			= $config->$val_func('shaper ifb');
+		$self->{_shaper_time_range}		= $config->$val_func('shaper time-range');
+		$self->{_shaper_verbose}		= $config->$val_func('shaper verbose');
+	}
 	return 0;
 }
 
@@ -485,6 +529,87 @@ sub get_ppp_opts {
 		}
 		$config .= "\n";
 	}
+
+	if (defined($self->{_shaper})) {
+		return (undef, "Must specify upstream rate limiting method.")
+			if ! defined $self->{_shaper_up_limiter};
+
+		return (undef, "Must specify downstream rate limiting method.")
+			if ! defined $self->{_shaper_down_limiter};
+
+		$loadmodules .= "shaper\n";
+		$config .= "[shaper]\n";
+
+		if (defined($self->{_shaper_vendor})) {
+			$config .= "vendor=$self->{_shaper_vendor}\n";
+		} else {
+			$config .= "vendor=WISPr\n";
+		}
+		if (defined($self->{_shaper_attr})) {
+			$config .= "attr=$self->{_shaper_attr}\n";
+		}
+		if (defined($self->{_shaper_attr_down})) {
+			$config .= "attr-down=$self->{_shaper_attr_down}\n";
+		} else {
+			$config .= "attr-down=WISPr-Bandwidth-Max-Down\n";
+		}
+		if (defined($self->{_shaper_attr_up})) {
+			$config .= "attr-up=$self->{_shaper_attr_up}\n";
+		} else {
+			$config .= "attr-up=WISPr-Bandwidth-Max-Up\n";
+		}
+		if (defined($self->{_shaper_burst_factor})) {
+			$config .= "burst-factor=$self->{_shaper_burst_factor}\n";
+		}
+		if (defined($self->{_shaper_down_burst_factor})) {
+			$config .= "down-burst-factor=$self->{_shaper_down_burst_factor}\n";
+		}
+		if (defined($self->{_shaper_up_burst_factor})) {
+			$config .= "up-burst-factor=$self->{_shaper_up_burst_factor}\n";
+		}
+		if (defined($self->{_shaper_latency})) {
+			$config .= "latency=$self->{_shaper_latency}\n";
+		}
+		if (defined($self->{_shaper_mpu})) {
+			$config .= "mpu=$self->{_shaper_mpu}\n";
+		}
+		if (defined($self->{_shaper_mtu})) {
+			$config .= "mtu=$self->{_shaper_mtu}\n";
+		}
+		if (defined($self->{_shaper_r2q})) {
+			$config .= "r2q=$self->{_shaper_r2q}\n";
+		}
+		if (defined($self->{_shaper_quantum})) {
+			$config .= "quantum=$self->{_shaper_quantum}\n";
+		}
+		if (defined($self->{_shaper_cburst})) {
+			$config .= "cburst=$self->{_shaper_cburst}\n";
+		}
+		if (defined($self->{_shaper_up_limiter})) {
+			$config .= "up-limiter=$self->{_shaper_up_limiter}\n";
+		}
+		if (defined($self->{_shaper_down_limiter})) {
+			$config .= "down-limiter=$self->{_shaper_down_limiter}\n";
+		}
+		if (defined($self->{_shaper_leaf_qdisc})) {
+			$config .= "leaf-qdisc=$self->{_shaper_leaf_qdisc}\n";
+		}
+		if (defined($self->{_shaper_rate_multiplier})) {
+			$config .= "rate-multiplier=$self->{_shaper_rate_multiplier}\n";
+		}
+		if (defined($self->{_shaper_ifb})) {
+			$config .= "ifb=$self->{_shaper_ifb}\n";
+		}
+		if (defined($self->{_shaper_time_range})) {
+			$config .= "time-range=$self->{_shaper_time_range}\n";
+		}
+		if (defined($self->{_shaper_verbose})) {
+			$config .= "verbose=$self->{_shaper_verbose}\n";
+		} else {
+			$config .= "verbose=1\n";
+		}
+	}
+
 
 	$finalconfig  = "$cfg_delim_begin\n";
 	$finalconfig .= $loadmodules . "\n";
