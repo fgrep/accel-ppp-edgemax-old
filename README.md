@@ -22,7 +22,9 @@ echo 'deb http://debian.c3sl.ufpr.br/debian-backports squeeze-backports main' >>
 
 aptitude update
 aptitude install gcc-4.4-mips-linux-gnu cmake git debhelper xapt
-xapt -a mips libc6-dev libpcre3-dev libssl-dev zlib1g-dev libnl2-dev debhelper linux-headers-octeon
+xapt -a mips libc6-dev libpcre3-dev libssl-dev zlib1g-dev libnl2-dev debhelper linux-libc-dev linux-headers-3.2.0-0.bpo.4-octeon
+rm -rf /usr/mips-linux-gnu/include/linux/
+ln -s /usr/mips-linux-gnu/src/linux-headers-3.2.0-0.bpo.4-common/include/linux /usr/mips-linux-gnu/include/linux
 ln -s /usr/mips-linux-gnu/src/linux-headers-3.2.0-0.bpo.4-common/arch/mips/include/asm/octeon /usr/mips-linux-gnu/include/asm/octeon
 su - myuser
 mkdir buildenv; cd buildenv
