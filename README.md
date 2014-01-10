@@ -14,6 +14,7 @@ Setting up toolchain and building with dpkg-buildpackage
 --------------------------------------------------------
 Clean and basic Debian squeeze (used 6.0.8 amd64, and only selected SSH Server during install package selection)
 
+```
 aptitude install emdebian-archive-keyring
 
 echo 'deb http://www.emdebian.org/debian/ squeeze main' >> /etc/apt/sources.list
@@ -31,5 +32,6 @@ tar -zcf accel-ppp_1.8.0-beta.orig.tar.gz accel-ppp-1.8.0-beta
 cp -a accel-ppp-edgemax/debian accel-ppp-1.8.0-beta/
 cd accel-ppp-1.8.0-beta
 fakeroot dpkg-buildpackage -amips
+```
 
 Done.
